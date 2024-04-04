@@ -1,0 +1,54 @@
+name: Create github release
+
+on:
+  push:
+    branches: [ 'main' ]
+
+jobs:
+
+  build-and-unit-test:
+    uses: ./.github/workflows/reusable-build-and-unit-test.yml
+
+  publish:
+    runs-on: ${{ matrix.operating-system }}
+    needs: build-and-unit-test
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]   
+
+    steps:
+    - name: Download solution artifact
+      uses: actions/download-artifact@main
+      with:
+        name: Solution artifact
+    - name: Publish
+      run: dotnet publish --configuration Release -p:UseAppHost=false --no-build --verbosity normal --output ./dist ./src/FileSorter.Console/FileSorter.Console.csproj
+      
+    - name: Archive Release
+      uses: thedoctor0/zip-release@0.7.5
+      with:
+        type: 'zip'
+        filename: file-sorter-v0.${{ github.run_number }}.0-beta.zip
+        exclusions: '*.git* /*node_modules/* .editorconfig'
+        path: dist
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+          files: file-sorter-v0.${{ github.run_number }}.0-beta.zip
+          tag_name: v0.${{ github.run_number }}.0-beta
+          prerelease: true
+          draft: true
+          generate_release_notes: true
+
+  cleanup-workflow-run-logs:
+    uses: ./.github/workflows/reusable-github-workflow-run-cleanup.yml
+    needs: publish
+    permissions:
+      actions: write
+    with:
+      days_old: "0"
+      runs_to_keep: "2"
