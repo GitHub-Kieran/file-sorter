@@ -1,0 +1,19 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ '**', '!main' ]
+  pull_request:
+    branches: [ '**', '!main' ]
+
+jobs:
+  build-and-unit-test:
+    uses: ./.github/workflows/reusable-build-and-unit-test.yml
+  cleanup-workflow-run-logs:
+    uses: ./.github/workflows/reusable-github-workflow-run-cleanup.yml
+    needs: build-and-unit-test
+    permissions:
+      actions: write
+    with:
+      days_old: "0"
+      runs_to_keep: "2"
