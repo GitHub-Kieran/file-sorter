@@ -1,0 +1,27 @@
+name: Clean up workflow runs
+
+on:
+  workflow_call:
+    inputs:
+      days_old:
+        description: "The amount of days old to delete"
+        type: string
+        default: "0"
+        required: false
+      runs_to_keep:
+        description: "The amount of latest workflows runs to keep"
+        type: string
+        default: "2"
+        required: false
+
+jobs:
+  clean-logs:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: igorjs/gh-actions-clean-workflow@v4
+        with:
+          days_old: "0"
+          runs_to_keep: "2"
+

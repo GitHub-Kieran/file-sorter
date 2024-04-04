@@ -1,10 +1,7 @@
-name: .NET
+name: Build and test
 
 on:
-  push:
-    branches: [ "**" ]
-  pull_request:
-    branches: [ "**" ]
+  workflow_call:
 
 jobs:
   build:
@@ -15,7 +12,8 @@ jobs:
         operating-system: [ubuntu-latest]
         
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -24,11 +22,11 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore --configuration Release
-    - name: Upload build artifact
+    - name: Upload solution artifact
       uses: actions/upload-artifact@main
       with:
-        name: Build artifact
-        path: ./test/FileSorter.UnitTest/bin/Release/
+        name: Solution artifact
+        path: .
         if-no-files-found: error
  
   test:
@@ -40,11 +38,9 @@ jobs:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]    
 
     steps:
-      - name: Download build artifact
+      - name: Download solution artifact
         uses: actions/download-artifact@main
         with:
-          name: Build artifact
-      - name: Test build artifact download
-        run: ls -R
-      - name: Test
-        run: dotnet test */FileSorter.UnitTest.dll --no-build --verbosity normal
+          name: Solution artifact
+      - name: Unit Test
+        run: dotnet test ./test/FileSorter.UnitTest/bin/Release/*/FileSorter.UnitTest.dll --no-build --verbosity normal
